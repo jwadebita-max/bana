@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="product-page">
+
+    <section class="product-detail" aria-labelledby="product-title">
+        <div class="product-gallery">
+            <div class="product-main-image">
+                <!-- الصورة الرئيسية الافتراضية -->
+                <img id="main-product-img" src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'images/default.png' %}{% endif %}" alt="{{ product.name }}">
+                {% if product.is_chef_special %}
+                <span class="image-tag"><i class="fa-solid fa-leaf"></i> Chef's special</span>
+                {% endif %}
+            </div>
+
+            <!-- الصور المصغرة الأربع الديناميكية -->
+            <div class="product-thumbnails" aria-label="More photos of {{ product.name }}">
+                {% if product.image %}
+                <button class="product-thumb selected" type="button" onclick="changeImage(this, '{{ product.image.url }}')">
+                    <img src="{{ product.image.url }}" alt="{{ product.name }} 1">
+                </button>
+                {% endif %}
+
+                {% if product.image2 %}
+                <button class="product-thumb" type="button" onclick="changeImage(this, '{{ product.image2.url }}')">
+                    <img src="{{ product.image2.url }}" alt="{{ product.name }} 2">
+                </button>
+                {% endif %}
+
+                {% if product.image3 %}
+                <button class="product-thumb" type="button" onclick="changeImage(this, '{{ product.image3.url }}')">
+                    <img src="{{ product.image3.url }}" alt="{{ product.name }} 3">
+                </button>
+                {% endif %}
+
+                {% if product.image4 %}
+                <button class="product-thumb" type="button" onclick="changeImage(this, '{{ product.image4.url }}')">
+                    <img src="{{ product.image4.url }}" alt="{{ product.name }} 4">
+                </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="product-information">
+            <div class="product-kicker">
+                <span class="availability-dot"></span> Freshly prepared <span class="kicker-divider">•</span> {{ product.category }}
+            </div>
+            <h1 id="product-title">{{ product.name }}</h1>
+            <div class="product-rating">
+                <span><i class="fa-solid fa-star"></i> {{ product.rating }}.0</span>
+                <span class="rating-reviews">({{ product.reviews_count|default:"128" }} reviews)</span>
+                <span class="rating-divider">|</span>
+                <span><i class="fa-regular fa-clock"></i> {{ product.prep_time|default:"35–40 min" }}</span>
+            </div>
+            <p class="product-description">
+                {{ product.description }}
+            </p>
+
+            <div class="product-highlights">
+                <div>
+                    <span class="highlight-icon"><i class="fa-solid fa-pepper-hot"></i></span>
+                    <span><strong>Rich & fragrant</strong><small>Traditional spice blend</small></span>
+                </div>
+                <div>
+                    <span class="highlight-icon"><i class="fa-solid fa-seedling"></i></span>
+                    <span><strong>Made fresh</strong><small>Quality local ingredients</small></span>
+                </div>
+            </div>
+
+            <div class="product-order-row">
+                <div>
+                    <span class="order-label">Price</span>
+                    <strong class="product-detail-price">{{ product.price }} <small>MAD</small></strong>
+                </div>
+
+                <!-- 🌟 التحقق هل المستخدم مسجل الدخول أم زائر -->
+                {% if request.user.is_authenticated %}
+                    <button class="product-add-btn" type="button" onclick="openCartModal('{{ product.id }}')">
+                        <i class="fa-solid fa-plus"></i> Add to cart
+                    </button>
+                {% else %}
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="product-add-btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fa-solid fa-plus"></i> Add to cart
+                    </a>
+                {% endif %}
+            </div>
+            <div class="delivery-note">
+                <i class="fa-solid fa-truck-fast"></i> Free delivery on orders over 250 MAD
+            </div>
+        </div>
+    </section>
+
+    <!-- الأطباق المقترحة -->
+    <section class="related-section" aria-labelledby="related-title">
+        <div class="section-heading">
+            <div>
+                <p class="section-eyebrow">A little more to love</p>
+                <h2 id="related-title">You may also like</h2>
+            </div>
+            <a href="{% url 'all' %}">View all <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+        <div class="related-grid">
+            {% for item in related_products %}
+            <article class="related-card">
+                <a href="{% url 'product_detail' item.id %}" style="text-decoration: none; color: inherit;">
+                    <img src="{% if item.image %}{{ item.image.url }}{% else %}{% static 'images/default.png' %}{% endif %}" alt="{{ item.name }}">
+                    <div class="related-card-info">
+                        <div><h3>{{ item.name }}</h3><span><i class="fa-solid fa-star"></i> {{ item.rating }}</span></div>
+                        <p>{{ item.description|truncatechars:35 }}</p>
+                        <strong>{{ item.price }} MAD</strong>
+                    </div>
+                </a>
+            </article>
+            {% empty %}
+                <p style="color: #8b85a0; font-size: 13px;">No related dishes available.</p>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+
+<!-- 💡 سكريبت تبديل الصور المصغرة بالصورة الرئيسية -->
+<script>
+function changeImage(element, imageUrl) {
+    if(!imageUrl) return;
+    const mainImg = document.getElementById('main-product-img');
+    mainImg.src = imageUrl;
+    document.querySelectorAll('.product-thumb').forEach(btn => {
+        btn.classList.remove('selected');
+    });
+    element.classList.add('selected');
+}
+</script>
+{% endblock content %}

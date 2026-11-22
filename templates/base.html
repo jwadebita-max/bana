@@ -1,0 +1,280 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maghreb Eats</title>
+    <!-- FontAwesome icons for symbols -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- القائمة الجانبية -->
+    {% include 'parts/sidebar.html' %}
+
+    <!-- المحتوى الرئيسي -->
+    <main class="main-content">
+        {% include 'parts/header.html' %}
+
+        <div class="content-body">
+            {% block content %}
+            {% endblock content %}
+        </div>
+    </main>
+
+    <!-- ويدجت الصوت وزر الشات -->
+    {% include 'parts/chat_btn.html' %}
+    {% include 'pages/card_to_add.html' %}
+
+    <!-- السكريبت الخاص بالاتصال الصوتي والويب سوكت -->
+    <script>
+let socket = null;
+let recognition = null;
+let isCallActive = false;
+
+const micButton = document.getElementById('mic-btn');
+const voiceOverlay = document.getElementById('voice-overlay');
+
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.lang = 'ar-SA';
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    recognition.onresult = function(event) {
+        const transcript = event.results[event.results.length - 1][0].transcript.trim();
+        const lowerTranscript = transcript.toLowerCase();
+
+        // 🌟 التحقق السريع من أوامر العودة للرئيسية صوتياً بالدارجة أو العربية
+        if (
+            lowerTranscript.includes("الرئيسية") ||
+            lowerTranscript.includes("الصفحة الرئيسية") ||
+            lowerTranscript.includes("رجعني") ||
+            lowerTranscript.includes("الدار") ||
+            lowerTranscript.includes("البداية")
+        ) {
+            window.location.href = "/"; // رابط الصفحة الرئيسية عندك
+            return;
+        }
+
+        if (socket && socket.readyState === WebSocket.OPEN && transcript) {
+            socket.send(JSON.stringify({ 'message': transcript }));
+        }
+    };
+
+    recognition.onend = function() {
+        if (isCallActive) {
+            try { recognition.start(); } catch (e) {}
+        }
+    };
+}
+
+if (micButton) {
+    micButton.addEventListener('click', () => {
+        if (!isCallActive) {
+            // --- 🟢 بداية المكالمة وإظهار الموجات ---
+            isCallActive = true;
+            micButton.style.backgroundColor = "#ff4444";
+            micButton.title = "اضغط لإنهاء المكالمة";
+
+            // إظهار النافذة والموجات الصوتية وابقاؤها ظاهرة
+            if (voiceOverlay) voiceOverlay.classList.add('active');
+
+            socket = new WebSocket('ws://' + window.location.host + '/ws/voice-chat/');
+
+            socket.onopen = function() {
+                if (recognition) {
+                    try { recognition.start(); } catch(e){}
+                }
+            };
+
+            // استقبال الردود وتحديث الكروت مع الحفاظ على بقاء البطاقة ظاهرة
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+
+                // 🌟 إذا طلب الزبون منتج واحد، نحوله مباشرة لصفحة التفاصيل ديالو من أي مكان!
+                if (data.status === 'success' && data.redirect_url) {
+                    window.location.href = data.redirect_url;
+                    return;
+                }
+
+                const foodGrid = document.querySelector('.food-grid');
+                if (!foodGrid) return;
+
+                foodGrid.innerHTML = '';
+
+                if (data.status === 'success' && data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const imageUrl = item.image ? item.image : '{% static "images/default.png" %}';
+                        const rating = item.rating || 5.0;
+                        const desc = item.description ? item.description : '';
+
+                        // ربط الكارت بصفحة التفاصيل
+                        const cardHTML = `
+                        <div class="food-card">
+                            <a href="/product/${item.id}/" class="food-img-container" style="text-decoration: none;">
+                                <img src="${imageUrl}" alt="${item.name}">
+                            </a>
+                            <div class="food-info">
+                                <div>
+                                    <a href="/product/${item.id}/" style="text-decoration: none; color: inherit;">
+                                        <div class="food-title">${item.name}</div>
+                                    </a>
+                                    <div class="food-desc">${desc}</div>
+                                </div>
+                                <div class="food-rating"><i class="fa-solid fa-star"></i>${rating}</div>
+                            </div>
+                            <div class="food-footer">
+                                <div class="food-price">MAD ${item.price}</div>
+                                <button class="add-to-cart-btn" onclick="openCartModal('${item.id}')">ADD TO CART</button>
+                            </div>
+                        </div>
+                        `;
+                        foodGrid.innerHTML += cardHTML;
+                    });
+                } else {
+                    foodGrid.innerHTML = `
+                        <div class="no-data" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                            <p> عذراً، لم أجد هذا الطلب في القائمة. </p>
+                        </div>
+                    `;
+                }
+
+                // 💡 التأكيد على بقاء البطاقة ظاهرة حتى بعد تحديث الكروت
+                if (isCallActive && voiceOverlay) {
+                    voiceOverlay.classList.add('active');
+                }
+            };
+
+            socket.onerror = function(e) {};
+
+        } else {
+            // --- 🔴 إنهاء المكالمة وإخفاء الموجات نهائياً ---
+            isCallActive = false;
+            micButton.style.backgroundColor = "";
+            micButton.title = "اضغط لبدء التحدث";
+
+            // إخفاء النافذة الشفافة عند إيقاف المكالمة
+            if (voiceOverlay) voiceOverlay.classList.remove('active');
+
+            if (recognition) {
+                try { recognition.stop(); } catch(e){}
+            }
+            if (socket) {
+                socket.close();
+            }
+        }
+    });
+}
+
+if (voiceOverlay) {
+    voiceOverlay.addEventListener('click', () => {
+        // إغلاق اختياري عند النقر على البطاقة إن رغبت في ذلك
+    });
+}
+
+// 🟢 دالة فتح الكارت الشفاف
+function openCartModal(productId) {
+    const modal = document.getElementById('cartModal');
+    const productIdInput = document.getElementById('modalProductId');
+
+    // تمرير رقم المنتج للحقل المخفي في الاستمارة
+    if (productIdInput && productId) {
+        productIdInput.value = productId;
+    }
+
+    // إظهار النافذة
+    if (modal) {
+        modal.classList.add('active');
+    }
+}
+
+// 🔴 دالة إغلاق الكارت الشفاف
+function closeCartModal() {
+    const modal = document.getElementById('cartModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// 💡 إغلاق النافذة تلقائياً إذا ضغط المستخدم في أي مكان خارجها
+window.addEventListener('click', (e) => {
+    const modal = document.getElementById('cartModal');
+    if (e.target === modal) {
+        closeCartModal();
+    }
+});
+
+// 🌟 حفظ الطلب في قاعدة البيانات أولاً ثم فتح الواتساب بالرسالة الاحترافية
+const checkoutForm = document.getElementById('checkoutForm');
+if (checkoutForm) {
+    checkoutForm.addEventListener('submit', function(e) {
+        e.preventDefault(); // منع إرسال الصفحة المباشر لتفادي انقطاع السلسلة
+
+        const form = this;
+        const formData = new FormData(form);
+
+        // 1️⃣ إرسال البيانات إلى Django لتخزينها في قاعدة البيانات
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        }).then(() => {
+            // 2️⃣ جلب البيانات المدخلة لتأكيدها في رسالة الواتساب
+            const fullName = form.querySelector('input[name="full_name"]').value;
+            const phone = form.querySelector('input[name="phone"]').value;
+            const address = form.querySelector('input[name="address"]').value;
+            const quantity = form.querySelector('input[name="quantity"]').value;
+            const orderType = form.querySelector('select[name="order_type"]').value;
+            const productId = document.getElementById('modalProductId').value;
+
+            let productName = "طلب منتج من متجر BENNA";
+            const titleElement = document.getElementById('product-title');
+            if (titleElement) {
+                productName = titleElement.innerText;
+            }
+
+            const adminPhone = "212678349736";
+
+            // 3️⃣ صياغة الرسالة الرسمية والاحترافية
+            let message = `السلام عليكم ورحمة الله وبركاته،\n\n`;
+            message += `أتمنى أن تكون بخير.\n`;
+            message += `أود تأكيد طلبية جديدة عبر منصة BENNA، وإليكم تفاصيل الطلب:\n\n`;
+            message += `- المنتج المطلوب: ${productName} (الرمز المرجعي: ${productId})\n`;
+            message += `- كمية الأطباق: ${quantity}\n`;
+            message += `- نوع الطلبية: ${orderType}\n\n`;
+            message += `بيانات التوصيل:\n`;
+            message += `- الاسم الكامل: ${fullName}\n`;
+            message += `- رقم الهاتف: ${phone}\n`;
+            message += `- عنوان التوصيل: ${address}\n\n`;
+            message += `يرجى تأكيد استلام الطلب وبدء التحضير فضلًا.\n`;
+            message += `شكراً لكم ولحسن تعاملكم.`;
+
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${adminPhone}?text=${encodedMessage}`;
+
+            // إغلاق النافذة الشفافة وتنظيف النموذج
+            closeCartModal();
+            form.reset();
+
+            // 4️⃣ فتح الواتساب
+            window.open(whatsappUrl, '_blank');
+        }).catch(error => {
+            console.error('Error saving order:', error);
+            alert('حدث خطأ أثناء حفظ الطلب، يرجى المحاولة مرة أخرى.');
+        });
+    });
+}
+</script>
+
+<script src="{% static 'js/hover-sound.js' %}"></script>
+
+</script>
+
+</body>
+</html>

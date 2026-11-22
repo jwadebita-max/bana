@@ -1,0 +1,23 @@
+<header>
+    <!-- 🌟 شريط البحث شغال مع إرسال القيمة عبر GET -->
+    <form action="{% url 'all' %}" method="GET" class="search-bar">
+        <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search..." />
+    </form>
+
+    <div class="header-nav">
+        <a href="{% url 'all' %}">Home</a>
+
+        {% if request.user.is_authenticated %}
+            <a href="{% url 'customer_dashboard' %}"><i class="fa-solid fa-user"></i> {{ request.user.username }}</a>
+        {% else %}
+            <a href="{% url 'login' %}"><i class="fa-solid fa-right-to-bracket"></i> Sign In</a>
+        {% endif %}
+
+        <div class="cart-badge">
+            <i class="fa-solid fa-cart-shopping"></i>
+            {% if unseen_orders_count > 0 %}
+                <span class="cart-count">{{ unseen_orders_count }}</span>
+            {% endif %}
+        </div>
+    </div>
+</header>

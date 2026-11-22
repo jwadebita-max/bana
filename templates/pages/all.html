@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="content-body">
+    <p style="color:#7c3aed;padding:5px 0 10px 0;">Our menu</p>
+    {% block more %}
+
+    {% endblock more %}
+
+    <div class="food-grid">
+        <!-- food card -->
+        {% for x in data %}
+        <div class="food-card">
+            <!-- جعل الصورة تدي للصفحة التفصيلية -->
+            <a href="{% url 'product_detail' x.id %}" class="food-img-container">
+                {% if x.image %}
+                    <img src="{{ x.image.url }}" alt="{{ x.name }}">
+                {% else %}
+                    <img src="{% static 'images/default.png' %}" alt="{{ x.name }}">
+                {% endif %}
+            </a>
+
+            <div class="food-info">
+                <div>
+                    <!-- رابط العنوان للصفحة التفصيلية -->
+                    <a href="{% url 'product_detail' x.id %}" style="text-decoration: none; color: inherit;">
+                        <div class="food-title">{{ x.name }}</div>
+                    </a>
+                    <div class="food-desc">{{ x.description|truncatechars:50 }}</div>
+                </div>
+                <div class="food-rating"><i class="fa-solid fa-star"></i> {{ x.rating }}</div>
+            </div>
+
+            <div class="food-footer">
+                <div class="food-price">MAD {{ x.price }}</div>
+
+                <!-- 🌟 التحقق هل المستخدم مسجل الدخول أم زائر -->
+                {% if request.user.is_authenticated %}
+                    <button class="add-to-cart-btn" type="button" onclick="openCartModal('{{ x.id }}')">
+                        ADD TO CART
+                    </button>
+                {% else %}
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="add-to-cart-btn" style="text-decoration: none; display: inline-block; text-align: center;">
+                        ADD TO CART
+                    </a>
+                {% endif %}
+
+            </div>
+        </div>
+        {% empty %}
+            <div class="no-data" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                <p>No Dishes Available Here Yet!</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}

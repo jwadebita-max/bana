@@ -1,0 +1,46 @@
+/* 🌟 BENNA Custom Glassmorphism Admin Styling */
+body {
+    background-color: #0c0916 !important;
+    color: #e2e8f0 !important;
+    font-family: 'Segoe UI', system-ui, sans-serif !important;
+}
+
+#header {
+    background: rgba(23, 19, 40, 0.9) !important;
+    backdrop-filter: blur(12px) !important;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2) !important;
+    color: #ffffff !important;
+}
+
+#branding h1 a {
+    color: #a78bfa !important;
+    font-weight: 700 !important;
+}
+
+.module {
+    background: rgba(23, 19, 40, 0.7) !important;
+    border: 1px solid rgba(139, 92, 246, 0.2) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4) !important;
+}
+
+div.breadcrumbs {
+    background: rgba(255, 255, 255, 0.03) !important;
+    color: #94a3b8 !important;
+}
+
+#changelist table {
+    background: transparent !important;
+}
+
+#changelist table thead th {
+    background: rgba(124, 58, 237, 0.2) !important;
+    color: #c4b5fd !important;
+}
+
+.button, input[type=submit], class="deletelink" {
+    background: linear-gradient(135deg, #7c3aed, #6d28d9) !important;
+    border: none !important;
+    border-radius: 8px !important;
+    color: white !important;
+}

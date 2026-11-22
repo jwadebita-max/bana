@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="dashboard-page">
+
+    <!-- 🌟 رأس الصالة الشخصية (Welcome Banner) -->
+    <section class="dashboard-hero">
+        <div class="hero-welcome">
+            <span class="user-badge"><i class="fa-solid fa-crown"></i> VIP Member</span>
+            <h1>Welcome back, <span class="username-highlight">{{ request.user.username|default:"Customer" }}</span>!</h1>
+            <p>This is your private space. Track your favorite dishes, monitor your expenses, and explore tailored recommendations.</p>
+        </div>
+        <div class="hero-stats-mini">
+            <div class="mini-stat-card">
+                <i class="fa-solid fa-bag-shopping"></i>
+                <div>
+                    <strong>{{ total_orders }}</strong>
+                    <span>Total Orders</span>
+                </div>
+            </div>
+            <div class="mini-stat-card">
+                <i class="fa-solid fa-wallet"></i>
+                <div>
+                    <strong>{{ total_spent }} MAD</strong>
+                    <span>Total Spent</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 📊 قسم التحليلات الذكية -->
+    <section class="analytics-section">
+        <div class="section-heading">
+            <div>
+                <p class="section-eyebrow">Your Taste Profile</p>
+                <h2>Food Analytics & Insights</h2>
+            </div>
+        </div>
+
+        <div class="analytics-grid">
+            <div class="analytics-card">
+                <div class="analytics-icon-box"><i class="fa-solid fa-fire"></i></div>
+                <div class="analytics-info">
+                    <span>Top Favorite Category</span>
+                    <h3>Moroccan Cuisine</h3>
+                    <p>Based on your recent activity history.</p>
+                </div>
+            </div>
+
+            <div class="analytics-card">
+                <div class="analytics-icon-box"><i class="fa-solid fa-utensils"></i></div>
+                <div class="analytics-info">
+                    <span>Dining Style</span>
+                    <h3>Personal & Family</h3>
+                    <p>Track your preferred serving choices.</p>
+                </div>
+            </div>
+
+            <div class="analytics-card highlight-glow">
+                <div class="analytics-icon-box special"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div class="analytics-info">
+                    <span>NERO-EATS AI Tip</span>
+                    <h3>Craving something special?</h3>
+                    <p>Explore our latest chef recommendations!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 📦 سجل الطلبيات الخاصة بالزبون (Private Orders History) -->
+    <section class="private-orders-section">
+        <div class="section-heading">
+            <div>
+                <p class="section-eyebrow">Your Activity</p>
+                <h2>Recent Private Orders</h2>
+            </div>
+            <a href="{% url 'all' %}">Order More <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+
+        <div class="orders-table-wrapper">
+            <table class="private-orders-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Dish Name</th>
+                        <th>Quantity</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if orders %}
+                        {% for order in orders %}
+                        <tr>
+                            <td><strong>#BN-{{ order.id }}</strong></td>
+                            <td>{{ order.food_item.name|default:"Custom Item" }}</td>
+                            <td>{{ order.dish_counter }}</td>
+                            <td>{{ order.request_type }}</td>
+                            <td><span class="status-badge delivered">Confirmed</span></td>
+                            <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <button class="share-btn" onclick="shareDish('{{ order.food_item.name|default:"Dish" }}')">
+                                    <i class="fa-solid fa-share-nodes"></i> Share
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 40px; color: #8b85a0;">
+                                No orders found yet. Start ordering your favorite meals!
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</div>
+
+<!-- 💡 سكريبت مشاركة الطبق خارجياً -->
+<script>
+function shareDish(dishName) {
+    if (navigator.share) {
+        navigator.share({
+            title: 'BENNA - Amazing Dish',
+            text: `Check out this delicious dish "${dishName}" I ordered from BENNA!`,
+            url: window.location.href,
+        }).catch(() => {});
+    } else {
+        alert(`Link copied for: ${dishName}! Share it with your friends.`);
+    }
+}
+</script>
+{% endblock content %}

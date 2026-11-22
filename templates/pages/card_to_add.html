@@ -1,0 +1,52 @@
+<!-- 🛒 Checkout Modal (نافذة إتمام الطلب الشفافة) -->
+<div class="cart-modal-overlay" id="cartModal">
+    <div class="cart-modal-card">
+        <button type="button" class="close-modal-btn" onclick="closeCartModal()">&times;</button>
+
+        <div class="modal-header">
+            <h2> Checkout <i class="fa-solid fa-bag-shopping"></i> </h2>
+            <p>Please enter your information to confirm the order</p>
+        </div>
+
+        <form id="checkoutForm" method="POST" action="{% url 'create_order' %}"> <!-- يمكنك تغيير الـ action للـ URL الخاص بإنهاء الطلب -->
+            {% csrf_token %}
+            <!-- حقل مخفي لمعرفة المنتج المحدد -->
+            <input type="hidden" name="product_id" id="modalProductId">
+
+            <div class="form-group">
+                <label> Full Name <i class="fa-solid fa-user"></i> </label>
+                <input type="text" name="full_name" placeholder="enter your name & last name" required>
+            </div>
+
+            <div class="form-group">
+                <label> Phone Number <i class="fa-solid fa-phone"></i> </label>
+                <input type="tel" name="phone" placeholder="06XXXXXXXX" required>
+            </div>
+
+            <div class="form-group">
+                <label> Delivery Address <i class="fa-solid fa-location-dot"></i> </label>
+                <input type="text" name="address" required>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label> Number of Dishes <i class="fa-solid fa-utensils"></i> </label>
+                    <input type="number" name="quantity" value="1" min="1" max="20" required>
+                </div>
+
+                <div class="form-group">
+                    <label> Order Type <i class="fa-solid fa-users"></i> </label>
+                    <select name="order_type" required>
+                        <option value="individual"> Individual </option>
+                        <option value="family"> Family </option>
+                        <option value="event"> event </option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="submit-order-btn">
+                 Confirm <i class="fa-solid fa-check-circle"></i>
+            </button>
+        </form>
+    </div>
+</div>

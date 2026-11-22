@@ -1,0 +1,41 @@
+<aside class="sidebar">
+    <div>
+        <div class="logo-area">
+            <div class="logo-icon">🍲</div>
+            <div class="logo-text">BENNA</div>
+        </div>
+
+        <nav class="nav-links">
+            <a href="{% url 'all' %}" class="nav-item active"><i class="fa-solid fa-border-all"></i> All Food</a>
+            <a href="{% url 'pastries' %}" class="nav-item"><i class="fa-solid fa-cookie-bite"></i> Pastries</a>
+            <a href="{% url 'salad' %}" class="nav-item"><i class="fa-solid fa-plate-wheat"></i> Salad</a>
+            <a href="{% url 'FastFood' %}" class="nav-item"><i class="fa-solid fa-burger"></i> Fast Food</a>
+            <a href="{% url 'MainCourses' %}" class="nav-item"><i class="fa-solid fa-utensils"></i> Main Courses</a>
+            <a href="{% url 'soups' %}" class="nav-item"><i class="fa-solid fa-bowl-food"></i> Soups</a>
+            <a href="{% url 'drinks' %}" class="nav-item"><i class="fa-solid fa-wine-glass"></i> Drinks</a>
+        </nav>
+    </div>
+
+    <div class="sidebar-footer">
+        {% if request.user.is_authenticated %}
+            <!-- 🌟 زبون مسجل الدخول -->
+            <a href="{% url 'customer_dashboard' %}" class="user-profile-link" style="text-decoration: none; color: inherit;">
+                <div class="user-profile" style="cursor: pointer; transition: 0.2s; padding: 6px; border-radius: 12px;">
+                    <div class="avatar">{{ request.user.username|slice:":1"|upper }}</div>
+                    <span style="font-size: 14px; font-weight: 500;">{{ request.user.username }}</span>
+                </div>
+            </a>
+
+            <!-- زر تسجيل الخروج -->
+            <a href="{% url 'logout' %}" class="nav-item logout" style="color: #ef4444;"><i class="fa-solid fa-right-from-bracket"></i> Logout</a>
+        {% else %}
+            <!-- 🌟 زائر جديد (Guest) -->
+            <a href="{% url 'login' %}" class="user-profile-link" style="text-decoration: none; color: inherit;">
+                <div class="user-profile" style="cursor: pointer; transition: 0.2s; padding: 6px; border-radius: 12px;">
+                    <div class="avatar" style="background-color: #4b39ef;"><i class="fa-solid fa-user"></i></div>
+                    <span style="font-size: 14px; font-weight: 500;">Sign In / Join</span>
+                </div>
+            </a>
+        {% endif %}
+    </div>
+</aside>
